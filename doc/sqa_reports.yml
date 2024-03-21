@@ -1,0 +1,6 @@
+Applications:
+    puppy_dog:
+        app_types:
+            - PuppyDogApp
+        content_directory: ${ROOT_DIR}/doc/content
+        log_default: WARNING
