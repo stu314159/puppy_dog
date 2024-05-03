@@ -1,0 +1,45 @@
+clear
+clc
+close 'all'
+
+%% set environment for EasyProp
+% put location of EasyProp.py module on the python search path
+if count(py.sys.path,' ') == 0  % <-- see if desired directory is on path
+    insert(py.sys.path,int32(0),' '); %<-- if not; add it.
+end
+
+fluid = py.EasyProp.simpleFluid('Helium','SI');
+
+%% System Parameters
+
+% relevant fluid properties
+P_in = 1000; % kPa, inlet pressure
+T_in = 27; % C, inlet temperature
+m_dot = 1e-2; % kg/s, mass flow rate
+rho_in = 1./fluid.v_pT(P_in,T_in); % kg/m^3, inlet density
+mu = fluid.mu_pT(P_in,T_in); % Pa-s, dynamic viscosity
+k = fluid.k_pT(P_in,T_in); % kW-m/k, thermal conductivity
+fprintf
+% geometry parameters
+r_channel = 0.00132; % m, channel radius
+L = 1; % m, channel length
+rr = 0; % relative roughness, 0 = smooth channel
+
+% derived parameters
+A_chan = 2*pi*r_channel^2; %, m^2, channel flow area
+D = 2*r_channel; % m, channel diameter
+v_avg = m_dot/(rho_in*A_chan); % m/s, average velocity
+Re = rho_in*v_avg*D/mu;
+g = 9.81; % m/s^2
+fprintf('Reynolds number = %g \n',Re);
+
+
+Colebrook = @(f,rr,D,Re) 1/sqrt(f) + ...
+    2.0*log10((rr/D)/3.7 + 2.51/(Re*sqrt(f)));
+
+f = fzero(@(f) Colebrook(f,rr,D,Re),0.01);
+fprintf('Darcy Friction Factor = %g \n',f);
+
+dP = f*(L/D)*((v_avg^2)/2)*rho_in; % Pa
+fprintf('Estimated differential pressure = %g Pa \n',...
+    dP);

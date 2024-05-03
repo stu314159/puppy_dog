@@ -1,26 +1,29 @@
 T_in = 300. # K
-m_dot_in = 1e-2 # kg/s
-press = 10e5 # Pa
+m_dot_in = 1e-1 # kg/s
+press = 100e3 # Pa
 
-[GlobalParams]
+[GlobalParams] # I assume all of these names are arbitrary? - no they are not.
   initial_p = ${press}
-  initial_vel = 0.0001
+  initial_vel = 0.0001 # why not based on mass flow rate, density, and cross-sectional area?
   initial_T = ${T_in}
-  gravity_vector = '0 0 0'
+  gravity_vector = '0 0 0' # no gravity
 
   rdg_slope_reconstruction = minmod
   scaling_factor_1phase = '1 1e-2 1e-4'
   closures = thm_closures
-  fp = he
+  fp = he # fluid properties?
 []
 
 [FluidProperties]
-  [he]
+  [he]  # can this be replaced with a HeliumFluidProperties object?
+    #type = HeliumFluidProperties # nope.  This didn't work.
     type = IdealGasFluidProperties
-    molar_mass = 4e-3
-    gamma = 1.67
-    k = 0.2556
-    mu = 3.22639e-5
+    molar_mass = 4e-3 # (kg/mol)
+    gamma = 1.67 # unitless
+    #k = 0.2556 # W/(m-K)
+    k = 0.156027   # my value from EasyProp
+    mu = 1.99365e-5 # my value from EasyProp
+    #mu = 3.22639e-5 # (Pa-s)
   []
 []
 
@@ -98,10 +101,13 @@ press = 10e5 # Pa
   nl_abs_tol = 1e-8
   nl_max_its = 25
 
+
+
 []
 
 [Outputs]
   exodus = true
+  execute_on = 'timestep_end'
 
   [console]
     type = Console
