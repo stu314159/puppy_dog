@@ -106,13 +106,21 @@ press = 100e3 # Pa
 []
 
 [Outputs]
-  exodus = true
-  execute_on = 'timestep_end'
+  #exodus = true
+  #execute_on = 'timestep_end'
+  [exodus]
+    type = Exodus
+    execute_on = 'initial final'
+  []
 
   [console]
     type = Console
     max_rows = 1
     outlier_variable_norms = false
+  []
+  [csv]
+    type = CSV  
+    execute_on = timestep_end
   []
   print_linear_residuals = false
 []
