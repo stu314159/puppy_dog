@@ -1,6 +1,6 @@
 T_in = 300. # K
-m_dot_in = 1e-2 # kg/s (original)
-#m_dot_in = 1e3 # kg/s
+#m_dot_in = 1e-2 # kg/s, original
+m_dot_in = 1e1 # kg/s
 press = 10e5 # Pa
 
 # core parameters
@@ -8,13 +8,13 @@ core_length = 1. # m
 core_n_elems = 25
 core_dia = '${units 2. cm -> m}'
 core_pitch = '${units 8.7 cm -> m}'
-A_core = '${fparse core_pitch^2 - 0.25 *pi * core_dia^2}'
-P_wet_core = '${fparse 4*core_pitch + pi * core_dia}'
-Dh_core = '${fparse 4 * A_core / P_wet_core}'
 
 # pipe parameters
 pipe_dia = '${units 10. cm -> m}'
 A_pipe = '${fparse 0.25 * pi * pipe_dia^2}'
+A_core = '${fparse core_pitch^2 - 0.25 *pi * core_dia^2}'
+P_wet_core = '${fparse 4*core_pitch + pi * core_dia}'
+Dh_core = '${fparse 4 * A_core / P_wet_core}'
 
 tot_power = 2000 # W
 
@@ -34,7 +34,7 @@ tot_power = 2000 # W
   scaling_factor_rhovV = 1e-2
   scaling_factor_rhowV = 1e-2
   scaling_factor_rhoEV = 1e-4
-  closures = thm_closures
+  closures = simple_closures
   fp = he
 []
 
@@ -49,7 +49,7 @@ tot_power = 2000 # W
 []
 
 [Closures]
-  [thm_closures]
+  [simple_closures]
     type = Closures1PhaseTHM
   []
 []
@@ -68,13 +68,6 @@ tot_power = 2000 # W
     type = TotalPower
     power = ${tot_power}
   []
-  [inlet]
-    type = InletMassFlowRateTemperature1Phase
-    input = 'up_pipe_1:in'
-    m_dot = ${m_dot_in}
-    T = ${T_in}
-  []
-
   [up_pipe_1]
     type = FlowChannel1Phase
     position = '0 0 0'
@@ -97,8 +90,7 @@ tot_power = 2000 # W
     orientation = '0 0 1'
     length = ${core_length}
     n_elems = ${core_n_elems}
-    roughness = .0001 # original
-    #roughness = 0.01
+    roughness = .0001
     A = '${A_core}'
     D_h = ${Dh_core}
   []
@@ -150,22 +142,56 @@ tot_power = 2000 # W
 
   [jct3]
     type = JunctionOneToOne1Phase
-    connections = 'up_pipe_2:out top_pipe:in'
+    connections = 'up_pipe_2:out top_pipe_1:in'
   []
 
-  [top_pipe]
+  [top_pipe_1]
     type = FlowChannel1Phase
     position = '0 0 2'
     orientation = '1 0 0'
-    length = 1
+    length = 0.5
+    n_elems = 10
+    A = ${A_pipe}
+    D_h = ${pipe_dia}
+  []
+
+  [top_pipe_2]
+    type = FlowChannel1Phase
+    position = '0.5 0 2'
+    orientation = '1 0 0'
+    length = 0.5
     n_elems = 10
     A = ${A_pipe}
     D_h = ${pipe_dia}
   []
 
   [jct4]
+    type = VolumeJunction1Phase
+    position = '0.5 0 2'
+    volume = 1e-5
+    connections = 'top_pipe_1:out top_pipe_2:in press_pipe:in'
+  []
+
+  [press_pipe]
+    type = FlowChannel1Phase
+    position = '0.5 0 2'
+    orientation = '0 0 1'
+    length = 0.2
+    n_elems = 5
+    A = ${A_pipe}
+    D_h = ${pipe_dia}
+  []
+
+  [pressurizer]
+    type = InletStagnationPressureTemperature1Phase
+    p0 = ${press}
+    T0 = ${T_in}
+    input = press_pipe:out
+  []
+
+  [jct5]
     type = JunctionOneToOne1Phase
-    connections = 'top_pipe:out down_pipe_1:in'
+    connections = 'top_pipe_2:out down_pipe_1:in'
   []
 
   [down_pipe_1]
@@ -177,7 +203,7 @@ tot_power = 2000 # W
     n_elems = 5
   []
 
-  [jct5]
+  [jct6]
     type = JunctionOneToOne1Phase
     connections = 'down_pipe_1:out cooling_pipe:in'
   []
@@ -198,7 +224,7 @@ tot_power = 2000 # W
     P_hf = '${fparse pi * pipe_dia}'
   []
 
-  [jct6]
+  [jct7]
     type = JunctionOneToOne1Phase
     connections = 'cooling_pipe:out down_pipe_2:in'
   []
@@ -213,10 +239,67 @@ tot_power = 2000 # W
     D_h = ${pipe_dia}
   []
 
-  [outlet]
-    type = Outlet1Phase
-    input = 'down_pipe_2:out'
-    p = ${press}
+  [jct8]
+    type = JunctionOneToOne1Phase
+    connections = 'down_pipe_2:out bottom_1:in'
+  []
+
+  [bottom_1]
+    type = FlowChannel1Phase
+    position = '1 0 0'
+    orientation = '-1 0 0'
+    length = 0.5
+    n_elems = 5
+    A = ${A_pipe}
+    D_h = ${pipe_dia}
+  []
+
+  [pump]
+    type = Pump1Phase
+    position = '0.5 0 0'
+    connections = 'bottom_1:out bottom_2:in'
+    volume = 1e-4
+    A_ref = ${A_pipe}
+    head = 0
+  []
+
+  [bottom_2]
+    type = FlowChannel1Phase
+    position = '0.5 0 0'
+    orientation = '-1 0 0'
+    length = 0.5
+    n_elems = 5
+    A = ${A_pipe}
+    D_h = ${pipe_dia}
+  []
+
+  [jct10]
+    type = JunctionOneToOne1Phase
+    connections = 'bottom_2:out up_pipe_1:in'
+  []
+[]
+
+[ControlLogic]
+  [set_point]
+    type = GetFunctionValueControl
+    function = ${m_dot_in}
+  []
+
+  [pid]
+    type = PIDControl
+    initial_value = 0
+    set_point = set_point:value
+    input = m_dot_pump
+    K_p = 1.
+    K_i = 4.
+    K_d = 0
+  []
+
+  [set_pump_head]
+    type = SetComponentRealValueControl
+    component = pump
+    parameter = head
+    value = pid:output
   []
 []
 
@@ -225,6 +308,14 @@ tot_power = 2000 # W
     type = ADHeatRateConvection1Phase
     block = core_chan
     P_hf = '${fparse pi *core_dia}'
+  []
+
+  [m_dot_pump]
+    type = ADFlowJunctionFlux1Phase
+    boundary = core_chan:in
+    connection_index = 1
+    equation = mass
+    junction = jct7
   []
 
   [core_T_out]
@@ -256,6 +347,11 @@ tot_power = 2000 # W
     boundary = cooling_pipe:out
     variable = T
   []
+  [pump_head]
+    type = RealComponentParameterValuePostprocessor
+    component = pump
+    parameter = head
+  []
 []
 
 [Preconditioning]
@@ -273,6 +369,7 @@ tot_power = 2000 # W
     type = IterationAdaptiveDT
     dt = 1
   []
+  dtmax = 5
   end_time = 500
 
   line_search = basic
