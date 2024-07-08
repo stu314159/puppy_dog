@@ -1,3 +1,5 @@
+# requires MOOSE Heat Conduction Module for the ADDiffusion kernel object.
+
 [Mesh]
   [gmg]
     type=GeneratedMeshGenerator
@@ -36,12 +38,12 @@
   []
   [top_partb]
     type = ConstantFunction
-    value = 2.25
+    value = 6.25
   []
   [top_fun]
     type = PiecewiseFunction
     axis = x
-    axis_coordinates = '1.5'
+    axis_coordinates = '2.5'
     functions = 'top_parta top_partb'
   []
 []
