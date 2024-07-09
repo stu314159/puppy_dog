@@ -4,21 +4,26 @@
 
 
 # Parameters
-T_inf = 473.0 # K
+#T_inf = 473.0 # K
 R = 0.015 # m, fuel outer radius / clad inner radius
 w = 0.003 # m, clad thickness
 k = 16.75 # W/m-K, clad thermal conductivity
 Q1 = 10e8 # W/m^2, heat generation (per unit length) in the cladding
-Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
+#Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
 
 [Mesh]
   [gm]
     type = GeneratedMeshGenerator
-    dim = 1
-    nx = 100
-    xmin = ${R}
-    xmax = '${fparse R+w}'
+    dim = 2
+    nx = 10
+    ny = 100
+    xmin = 0
+    xmax = 0.02
+    ymin = ${R}
+    ymax = '${fparse R+w}'
   []
+  coord_type = RZ
+  rz_coord_axis = x
 []
 
 [Problem]
@@ -32,16 +37,55 @@ Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
   []
 []
 
+[Functions]
+  [coeff_fun]
+    type = ParsedFunction
+    value = '-1*${k}'
+  []
+  [rhs_fun]
+    type = ParsedFunction
+    value = '${Q1}*exp(-y/${R})'
+  []
+[]
+
 [Kernels]
   [diff]
     type = FunctionDiffusion 
     variable = u
-    function = '-1.0'
+    function = coeff_fun
   []
   [rhs]
     type = ADBodyForce
-    #function = '${fparse Q1/(x*k)*exp(-x/R)}'
-    function = '-1.0'
+    variable = u
+    function = rhs_fun
+    #function = '-1.0'
+  []
+[]
+
+[BCs]
+  [left]
+    type = ADNeumannBC
+    variable = u
+    boundary = left
+    value = 0
+  []
+  [right]
+    type = ADNeumannBC
+    variable = u
+    boundary = right
+    value = 0
+  []
+  [inside]
+    type = ADDirichletBC
+    variable = u
+    boundary = bottom
+    value = 800
+  []
+  [outside]
+    type = ADDirichletBC
+    variable = u
+    boundary = top
+    value = 700
   []
 
 []
