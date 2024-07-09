@@ -24,5 +24,7 @@ PDADRobinBC::computeQpResidual()
   ADReal k = 16.75; // W/m-K
   ADReal T_inf = 473; // K
   
-  return -_test[_i][_qp]*(h/k)*(_u[_qp]-T_inf);
+  ADReal r = _q_point[_qp](0); // m
+  
+  return -_test[_i][_qp]*(h/(k*r))*(_u[_qp]-T_inf);
 }

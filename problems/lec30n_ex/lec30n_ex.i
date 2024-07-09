@@ -40,15 +40,15 @@ Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
 [Functions]
   [coeff_fun]
     type = ParsedFunction
-    value = '-1.0*${k}'
+    value = '-1.0*${k}*y'
   []
   [rhs_fun]
     type = ParsedFunction
-    value = '-1.0*${Q1}*exp(-y/${R})/(y*${k})'
+    value = '1.0*${Q1}*exp(-y/${R})'
   []
   [inner_bc_fun]
     type = ParsedFunction
-    value = '-1.0*${Q2}/${k}'
+    value = '-1.0*${Q2}/(${k}*y)'
   []
 []
 
