@@ -8,8 +8,8 @@
 R = 0.015 # m, fuel outer radius / clad inner radius
 w = 0.003 # m, clad thickness
 k = 16.75 # W/m-K, clad thermal conductivity
-Q1 = 10e8 # W/m^2, heat generation (per unit length) in the cladding
-#Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
+Q1 = 1e8 # W/m^2, heat generation (per unit length) in the cladding
+Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
 
 [Mesh]
   [gm]
@@ -40,11 +40,15 @@ Q1 = 10e8 # W/m^2, heat generation (per unit length) in the cladding
 [Functions]
   [coeff_fun]
     type = ParsedFunction
-    value = '-1*${k}'
+    value = '-1.0*${k}'
   []
   [rhs_fun]
     type = ParsedFunction
-    value = '${Q1}*exp(-y/${R})'
+    value = '-1.0*${Q1}*exp(-y/${R})/(y*${k})'
+  []
+  [inner_bc_fun]
+    type = ParsedFunction
+    value = '-1.0*${Q2}/${k}'
   []
 []
 
@@ -76,16 +80,15 @@ Q1 = 10e8 # W/m^2, heat generation (per unit length) in the cladding
     value = 0
   []
   [inside]
-    type = ADDirichletBC
+    type = ADFunctionNeumannBC
     variable = u
     boundary = bottom
-    value = 800
+    function = inner_bc_fun
   []
   [outside]
-    type = ADDirichletBC
+    type = PDADRobinBC
     variable = u
     boundary = top
-    value = 700
   []
 
 []
