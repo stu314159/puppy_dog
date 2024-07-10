@@ -37,7 +37,7 @@ Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
 [Functions]
   [coeff_fun]
     type = ParsedFunction
-    value = '-1.0*${k}'
+    expression = '-1.0*${k}'
   []
   [rhs_fun]
     type = Lec30nRHSFunction
@@ -46,7 +46,7 @@ Q2 = 6.32e5 # W/m^2, heat flux from fuel to cladding
   []
   [inner_bc_fun]
     type = ParsedFunction
-    value = '-1.0*${Q2}/(${k})'
+    expression = '-1.0*${Q2}/(${k})'
   []
 []
 
